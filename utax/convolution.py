@@ -1,5 +1,6 @@
-from functools import patial
+from functools import partial
 import jax.numpy as jnp
+from jax.scipy import stats
 from jax import jit
 from jax.lax import conv_general_dilated, conv_dimension_numbers
 
@@ -113,7 +114,7 @@ class GaussianFilter(object):
 
         # Compute the kernel
         x = jnp.ravel(jnp.indices((npix,)))  # pixel coordinates
-        kernel = norm.pdf((x-self.radius) / sigma)
+        kernel = stats.norm.pdf((x-self.radius) / sigma)
         kernel /= kernel.sum()
 
         return kernel

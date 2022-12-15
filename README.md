@@ -1,7 +1,7 @@
 ![License](https://img.shields.io/github/license/aymgal/utax)
 ![PyPi python support](https://img.shields.io/badge/Python-3.7-blue)
 [![Tests](https://github.com/aymgal/utax/actions/workflows/python-package.yml/badge.svg?branch=main)](https://github.com/aymgal/utax/actions/workflows/ci_tests.yml)
-[![Coverage Status](https://coveralls.io/repos/github/aymgal/utax/badge.svg)](https://coveralls.io/github/aymgal/utax)
+[![Coverage Status](https://coveralls.io/repos/github/aymgal/utax/badge.svg?branch=main)](https://coveralls.io/github/aymgal/utax?branch=main)
 
 # `utax`
 

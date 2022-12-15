@@ -5,8 +5,8 @@ from jax import jit
 from jax.lax import conv_general_dilated, conv_dimension_numbers
 
 
-@partial(jit, static_argnums=(2,))
-def convolveSeparableDilated(image2D, kernel1D, dilation=1):
+@partial(jit, static_argnums=(2, 3))
+def convolve_separable_dilated(image2D, kernel1D, dilation=1, boundary='edge'):
     """
      
      Convolves an image contained in image2D with the 1D kernel kernel1D.
@@ -34,7 +34,7 @@ def convolveSeparableDilated(image2D, kernel1D, dilation=1):
     
     # padding
     b = int(kernel1D.size // 2) * dilation
-    padded = jnp.pad(image2D, ((b, b), (b, b)), mode='edge')
+    padded = jnp.pad(image2D, ((b, b), (b, b)), mode=boundary)
     # Fred D.: THIS PADDING IS DANGEROUS AS IT WILL OVERFLOW MEMORY VERY QUICKLY
     # I LEAVE IT AS ORIGINALLY IMPLEMENTED AS I DO NOT WANT TO CHANGE THE
     # OUTPUT OF THE WAVELET TRANSFORM (this could have impact on the science)
@@ -131,4 +131,4 @@ class GaussianFilter(object):
         # Convolve
         # pad_mode = ['constant', 'edge'][mode == 'nearest']
         # image_padded = jnp.pad(image, pad_width=radius, mode=pad_mode)
-        return convolveSeparableDilated(image, self.kernel)
+        return convolve_separable_dilated(image, self.kernel)

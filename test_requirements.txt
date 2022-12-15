@@ -1,3 +1,5 @@
+numpy
+scipy
 jax>=0.3.14
 jaxlib>=0.3.14
-python-pysap
+#python-pysap

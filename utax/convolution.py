@@ -85,7 +85,7 @@ def convolve_separable_dilated(image2D, kernel1D, dilation=1, boundary='edge'):
 
 class GaussianFilter(object):
     """JAX-friendly Gaussian filter."""
-    def __init__(self, sigma, truncate=4.0):
+    def __init__(self, sigma, truncate=4.0, mode='edge'):
         """Convolve an image by a gaussian filter.
 
         Parameters
@@ -102,6 +102,7 @@ class GaussianFilter(object):
 
         """
         self.kernel = self.gaussian_kernel(sigma, truncate)
+        self.mode = mode
 
     def gaussian_kernel(self, sigma, truncate):
         # Determine the kernel pixel size (rounded up to an odd int)
@@ -131,4 +132,4 @@ class GaussianFilter(object):
         # Convolve
         # pad_mode = ['constant', 'edge'][mode == 'nearest']
         # image_padded = jnp.pad(image, pad_width=radius, mode=pad_mode)
-        return convolve_separable_dilated(image, self.kernel)
+        return convolve_separable_dilated(image, self.kernel, boundary=self.mode)

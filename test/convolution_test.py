@@ -3,7 +3,7 @@ __author__ = 'aymgal'
 import pytest
 import numpy as np
 import numpy.testing as npt
-from scipy import signal
+from scipy import signal, ndimage
 
 from utax.convolution import *
 
@@ -50,9 +50,20 @@ def test_convolve_separable_dilated():
     # np.random.seed(36)
     # image = np.random.randn(10, 10)
     # image_conv = np.array(convolve_separable_dilated(image, kernel_1d, boundary='wrap'))
-    # image_conv_ref = scipy.signal.convolve2d(image, kernel_2d, mode='same', boundary='wrap')
+    # image_conv_ref = signal.convolve2d(image, kernel_2d, mode='same', boundary='wrap')
     # print(image_conv.shape, image_conv_ref.shape)
     # npt.assert_almost_equal(image_conv, image_conv_ref, decimal=5)
+
+
+def test_gaussian_filter():
+    np.random.seed(36)
+    image = np.random.randn(10, 10)
+    sigma = 1
+    gaussian_filter = GaussianFilter(sigma, truncate=5., mode='wrap')
+    image_filt = gaussian_filter(image)
+    image_filt_ref = ndimage.gaussian_filter(image, sigma, truncate=5., mode='wrap')
+    npt.assert_almost_equal(image_filt, image_filt_ref, decimal=7)
+
 
 
 # class TestGaussianFilter(object):

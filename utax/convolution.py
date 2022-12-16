@@ -101,7 +101,10 @@ class GaussianFilter(object):
         Reproduces `scipy.ndimage.gaussian_filter` with high accuracy.
 
         """
-        self.kernel = self.gaussian_kernel(sigma, truncate)
+        if sigma <= 0:
+            self.kernel = None
+        else:
+            self.kernel = self.gaussian_kernel(sigma, truncate)
         self.mode = mode
 
     def gaussian_kernel(self, sigma, truncate):
@@ -111,7 +114,7 @@ class GaussianFilter(object):
 
         # Return the identity if sigma is not a positive number
         if sigma <= 0:
-            return jnp.array([[1.]])
+            return jnp.ones(1)
 
         # Compute the kernel
         x = jnp.ravel(jnp.indices((npix,)))  # pixel coordinates
@@ -132,4 +135,6 @@ class GaussianFilter(object):
         # Convolve
         # pad_mode = ['constant', 'edge'][mode == 'nearest']
         # image_padded = jnp.pad(image, pad_width=radius, mode=pad_mode)
+        if self.kernel is None:
+            return image
         return convolve_separable_dilated(image, self.kernel, boundary=self.mode)

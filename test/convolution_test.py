@@ -22,22 +22,22 @@ def gaussian_kernel(odd=True, sigma=1., truncate=5., ndim=1):
     # Compute the kernel
     if ndim == 1:
         x = np.arange(npix)
-        kernel = np.exp(-(x-radius)**2 / sigma**2)
+        kernel = np.exp(-(x-radius)**2 / (2*sigma**2))
     else:
         x, y = np.meshgrid(np.arange(npix), np.arange(npix))  # pixel coordinates
-        kernel = np.exp(-((x-radius)**2+(y-radius)**2) / sigma**2)
+        kernel = np.exp(-((x-radius)**2+(y-radius)**2) / (2*sigma**2))
     return kernel / kernel.sum()
 
 
 def test_convolve_separable_dilated():
     # test the utax function against scipy's method convolve2d
+    np.random.seed(36)
+    image = np.random.randn(10, 10)
 
     # odd kernels
     kernel_1d = gaussian_kernel(sigma=0.4, odd=True, ndim=1)
     kernel_2d = gaussian_kernel(sigma=0.4, odd=True, ndim=2)
     npt.assert_almost_equal(np.outer(kernel_1d, kernel_1d), kernel_2d, decimal=10)  # sanity check
-    np.random.seed(36)
-    image = np.random.randn(10, 10)
     image_conv = np.array(convolve_separable_dilated(image, kernel_1d, boundary='wrap'))
     image_conv_ref = signal.convolve2d(image, kernel_2d, mode='same', boundary='wrap')
     npt.assert_almost_equal(image_conv, image_conv_ref, decimal=5)
@@ -46,9 +46,6 @@ def test_convolve_separable_dilated():
     # kernel_1d = gaussian_kernel(sigma=0.4, odd=False, ndim=1)
     # kernel_2d = gaussian_kernel(sigma=0.4, odd=False, ndim=2)
     # npt.assert_almost_equal(np.outer(kernel_1d, kernel_1d), kernel_2d, decimal=10)  # sanity check
-
-    # np.random.seed(36)
-    # image = np.random.randn(10, 10)
     # image_conv = np.array(convolve_separable_dilated(image, kernel_1d, boundary='wrap'))
     # image_conv_ref = signal.convolve2d(image, kernel_2d, mode='same', boundary='wrap')
     # print(image_conv.shape, image_conv_ref.shape)
@@ -56,14 +53,26 @@ def test_convolve_separable_dilated():
 
 
 def test_gaussian_filter():
+    sigma = 0.3
+    truncate = 5.
+    gaussian_filter = GaussianFilter(sigma, truncate=truncate, mode='wrap')
+
+    # first test the gaussian kernel itself
+    kernel = gaussian_filter.gaussian_kernel(sigma, truncate)
+    kernel_ref = gaussian_kernel(odd=True, sigma=sigma, truncate=truncate, ndim=1)
+    npt.assert_almost_equal(kernel, kernel_ref, decimal=7)
+
+    # then test the result of the convolution
     np.random.seed(36)
     image = np.random.randn(10, 10)
-    sigma = 1
-    gaussian_filter = GaussianFilter(sigma, truncate=5., mode='wrap')
     image_filt = gaussian_filter(image)
-    image_filt_ref = ndimage.gaussian_filter(image, sigma, truncate=5., mode='wrap')
-    npt.assert_almost_equal(image_filt, image_filt_ref, decimal=7)
+    image_filt_ref = ndimage.gaussian_filter(image, sigma, truncate=truncate, mode='wrap')
+    npt.assert_almost_equal(image_filt, image_filt_ref, decimal=6)
 
+    # test with dumb sigma value
+    gaussian_filter_id = GaussianFilter(-1., truncate=truncate, mode='wrap')
+    image_filt = gaussian_filter_id(image)
+    npt.assert_almost_equal(image_filt, image, decimal=7)
 
 
 # class TestGaussianFilter(object):

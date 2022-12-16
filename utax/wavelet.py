@@ -2,7 +2,7 @@ from functools import partial
 import jax.numpy as jnp
 from jax import jit
 
-from utax.convolution import convolveSeparableDilated
+from utax.convolution import convolve_separable_dilated
 
 
 class WaveletTransform(object):
@@ -77,7 +77,7 @@ class WaveletTransform(object):
         kernel = self._h.copy()
 
         # Compute the first scale:
-        c1 = convolveSeparableDilated(image, kernel)
+        c1 = convolve_separable_dilated(image, kernel)
         # Wavelet coefficients:
         w0 = (image - c1)  
         result = jnp.expand_dims(w0, 0)
@@ -87,7 +87,7 @@ class WaveletTransform(object):
         # at each scale, the kernel becomes larger ( a trou ) using the
         # dilation argument in the jax wrapper for convolution.
         for step in range(1, self._n_scales):
-            cj1 = convolveSeparableDilated(cj, kernel, dilation=self._fac**step)
+            cj1 = convolve_separable_dilated(cj, kernel, dilation=self._fac**step)
             # wavelet coefficients
             wj = (cj - cj1)
             result = jnp.concatenate((result, jnp.expand_dims(wj, 0)), axis=0)
@@ -110,8 +110,8 @@ class WaveletTransform(object):
         kernel = self._h.copy()
 
         # Compute the first scale:
-        c1 = convolveSeparableDilated(image, kernel)
-        c1p = convolveSeparableDilated(c1, kernel)
+        c1 = convolve_separable_dilated(image, kernel)
+        c1p = convolve_separable_dilated(c1, kernel)
         # Wavelet coefficients:
         w0 = (image - c1p)  
         result = jnp.expand_dims(w0, 0)
@@ -121,8 +121,8 @@ class WaveletTransform(object):
         # at each scale, the kernel becomes larger ( a trou ) using the
         # dilation argument in the jax wrapper for convolution.
         for step in range(1, self._n_scales):
-            cj1  = convolveSeparableDilated(cj, kernel, dilation=self._fac**step)
-            cj1p = convolveSeparableDilated(cj1, kernel, dilation=self._fac**step)
+            cj1  = convolve_separable_dilated(cj, kernel, dilation=self._fac**step)
+            cj1p = convolve_separable_dilated(cj1, kernel, dilation=self._fac**step)
             # wavelet coefficients
             wj = (cj - cj1p)
             result = jnp.concatenate((result, jnp.expand_dims(wj, 0)), axis=0)
@@ -150,7 +150,7 @@ class WaveletTransform(object):
         
         # Start with the last scale 'J-1'
         cJ = coeffs[self._n_scales, :, :]
-        cJp = convolveSeparableDilated(cJ, kernel, 
+        cJp = convolve_separable_dilated(cJ, kernel, 
                                        dilation=self._fac**(self._n_scales-1))
         
 
@@ -160,7 +160,7 @@ class WaveletTransform(object):
         # Compute the remaining scales
         for ii in range(self._n_scales-2, -1, -1):
             cj1 = cj
-            cj1p = convolveSeparableDilated(cj1, kernel, dilation=self._fac**ii)
+            cj1p = convolve_separable_dilated(cj1, kernel, dilation=self._fac**ii)
             wj1 = coeffs[ii, :, :]
             cj = cj1p + wj1
 

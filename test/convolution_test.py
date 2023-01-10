@@ -5,7 +5,18 @@ import numpy as np
 import numpy.testing as npt
 from scipy import signal, ndimage
 
+from jax.config import config
+config.update("jax_enable_x64", True)  # makes a difference when comparing to scipy's routines!!
+
 from utax.convolution import *
+
+
+def kernel_from_size(nxk, nyk):
+    ckx, cky = 0.1, 0.1  # off-centered kernel
+    sigkx, sigky = 0.2, 0.1 # different sigma along both axes
+    xx, yy = np.meshgrid(np.linspace(-0.5, 0.5, nyk), np.linspace(-0.5, 0.5, nxk))
+    kernel = np.exp(-(xx-ckx)**2/sigkx**2 - (yy-cky)**2/sigky**2)
+    return kernel / kernel.sum()
 
 
 def gaussian_kernel(odd=True, sigma=1., truncate=5., ndim=1):
@@ -73,6 +84,123 @@ def test_gaussian_filter():
     gaussian_filter_id = GaussianFilter(-1., truncate=truncate, mode='wrap')
     image_filt = gaussian_filter_id(image)
     npt.assert_almost_equal(image_filt, image, decimal=7)
+
+
+def test_blurring_operator():
+    np.random.seed(36)
+
+    # odd image + odd kernel smaller than image
+    nx, ny = 9, 9
+    image = np.random.randn(ny, nx)
+    kernel = kernel_from_size(5, 5)
+    conv_matrix = build_convolution_matrix(kernel, image.shape)
+    npt.assert_almost_equal(conv_matrix.dot(image.flatten()).reshape(image.shape), 
+                            signal.convolve2d(image, kernel, mode='same'),
+                            decimal=10)
+
+    # even image + odd kernel smaller than image
+    nx, ny = 10, 10
+    image = np.random.randn(ny, nx)
+    kernel = kernel_from_size(5, 5)
+    conv_matrix = build_convolution_matrix(kernel, image.shape)
+    npt.assert_almost_equal(conv_matrix.dot(image.flatten()).reshape(image.shape), 
+                            signal.convolve2d(image, kernel, mode='same'),
+                            decimal=10)
+
+
+def test_blurring_operator_class():
+    np.random.seed(36)
+
+    # odd image + odd kernel smaller than image
+    nx, ny = 9, 9
+    image = np.random.randn(ny, nx)
+    kernel = kernel_from_size(5, 5)
+    bop = BlurringOperator(nx, ny, kernel)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='full'), 
+                            signal.convolve2d(image, kernel, mode='full'), 
+                            decimal=10)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='same'), 
+                            signal.convolve2d(image, kernel, mode='same'), 
+                            decimal=10)
+
+    # even image + odd kernel smaller than image
+    nx, ny = 10, 10
+    image = np.random.randn(ny, nx)
+    kernel = kernel_from_size(5, 5)
+    bop = BlurringOperator(nx, ny, kernel)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='full'), 
+                            signal.convolve2d(image, kernel, mode='full'), 
+                            decimal=10)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='same'), 
+                            signal.convolve2d(image, kernel, mode='same'), 
+                            decimal=10)
+
+    # even image + even kernel smaller than image
+    nx, ny = 10, 10
+    image = np.random.randn(ny, nx)
+    kernel = kernel_from_size(4, 4)
+    bop = BlurringOperator(nx, ny, kernel)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='full'), 
+                            signal.convolve2d(image, kernel, mode='full'), 
+                            decimal=10)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='same'), 
+                            signal.convolve2d(image, kernel, mode='same'), 
+                            decimal=10)
+
+    # odd image + even kernel smaller than image
+    nx, ny = 9, 9
+    image = np.random.randn(ny, nx)
+    kernel = kernel_from_size(4, 4)
+    bop = BlurringOperator(nx, ny, kernel)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='full'), 
+                            signal.convolve2d(image, kernel, mode='full'), 
+                            decimal=10)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='same'), 
+                            signal.convolve2d(image, kernel, mode='same'), 
+                            decimal=10)
+
+    # even image + odd kernel larger than image
+    nx, ny = 10, 10
+    image = np.random.randn(ny, nx)
+    kernel = kernel_from_size(13, 13)
+    bop = BlurringOperator(nx, ny, kernel)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='full'), 
+                            signal.convolve2d(image, kernel, mode='full'), 
+                            decimal=10)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='same'), 
+                            signal.convolve2d(image, kernel, mode='same'), 
+                            decimal=10)
+
+    # even image + odd kernel larger than image
+    nx, ny = 10, 10
+    image = np.random.randn(ny, nx)
+    kernel = kernel_from_size(13, 13)
+    bop = BlurringOperator(nx, ny, kernel)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='full'), 
+                            signal.convolve2d(image, kernel, mode='full'), 
+                            decimal=10)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='same'), 
+                            signal.convolve2d(image, kernel, mode='same'), 
+                            decimal=10)
+
+    # non-square image + non-square kernel
+    nx, ny = 10, 11
+    image = np.random.randn(nx, ny)
+    kernel = kernel_from_size(6, 5)
+    bop = BlurringOperator(nx, ny, kernel)
+    npt.assert_almost_equal(bop.convolve(image, out_padding='same'), 
+                            signal.convolve2d(image, kernel, mode='same'), 
+                            decimal=10)
+
+    # Dirac kernel (identity operation)
+    nx, ny = 10, 10
+    image = np.random.randn(ny, nx)
+    kernel = kernel_from_size(1, 1)
+    bop = BlurringOperator(nx, ny, kernel)
+    npt.assert_almost_equal(image, 
+                            signal.convolve2d(image, kernel, mode='same'), 
+                            decimal=10)
+
 
 
 # class TestGaussianFilter(object):

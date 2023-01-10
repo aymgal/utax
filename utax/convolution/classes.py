@@ -93,17 +93,17 @@ class BlurringOperator(object):
         else:
             raise ValueError(f"padding model '{out_padding}' is not supported.")
 
-    # @partial(jit, static_argnums=(0, 2))
-    # def convolve_transpose(self, image, in_padding='same'):
-    #     if in_padding == 'full':
-    #         image_padded = image
-    #     elif in_padding == 'same':
-    #         image_padded = jnp.pad(image, ((self.i1, -self.i2), (self.j1, -self.j2)), 
-    #                                'constant', constant_values=0)
-    #     else:
-    #         raise ValueError(f"padding model '{in_padding}' is not supported.")
-    #     image_conv_t = self.v2m(self.conv_matrix.T.dot(self.m2v(image_padded)), self.target_shape)
-    #     return image_conv_t
+    @partial(jit, static_argnums=(0, 2))
+    def convolve_transpose(self, image, in_padding='same'):
+        if in_padding == 'full':
+            image_padded = image
+        elif in_padding == 'same':
+            image_padded = jnp.pad(image, ((self.i1, -self.i2), (self.j1, -self.j2)), 
+                                   'constant', constant_values=0)
+        else:
+            raise ValueError(f"padding model '{in_padding}' is not supported.")
+        image_conv_t = self.v2m(self.conv_matrix.T.dot(self.m2v(image_padded)), self.target_shape)
+        return image_conv_t
 
     @staticmethod
     def toeplitz_matrix(input_shape, kernel, verbose=False):
@@ -185,3 +185,11 @@ class BlurringOperator(object):
     @staticmethod
     def v2m(vec, output_shape):
         return jnp.flipud(vec.reshape(output_shape, order='C'))
+
+    # @staticmethod
+    # def m2v_t(mat):
+    #     return jnp.flipud(mat.flatten(order='C'))
+
+    # @staticmethod
+    # def v2m_t(vec, output_shape):
+    #     return jnp.flipud(vec).reshape(output_shape, order='C')

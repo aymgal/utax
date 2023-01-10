@@ -201,6 +201,16 @@ def test_blurring_operator_class():
                             signal.convolve2d(image, kernel, mode='same'), 
                             decimal=10)
 
+    # simple test for the transpose convolution
+    # WARNING: just a test on the shape, not the actual values !!!
+    nx, ny = 10, 10
+    image = np.random.randn(ny, nx)
+    kernel = kernel_from_size(5, 5)
+    bop = BlurringOperator(nx, ny, kernel)
+    result = bop.convolve_transpose(bop.convolve(image, out_padding='full'), in_padding='full')
+    assert result.shape == image.shape
+    result = bop.convolve_transpose(bop.convolve(image, out_padding='same'), in_padding='same')
+    assert result.shape == image.shape
 
 
 # class TestGaussianFilter(object):

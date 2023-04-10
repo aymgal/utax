@@ -128,9 +128,14 @@ class WaveletTransform(object):
     def scale_norms(self):
         if not hasattr(self, '_norms'):
             npix_dirac = 2**(self._n_scales + 2)
-            dirac = jnp.diag((jnp.arange(npix_dirac) == int(npix_dirac / 2)).astype(float))
-            wt_dirac = self.decompose(dirac)
-            self._norms = jnp.sqrt(jnp.sum(wt_dirac**2, axis=(1, 2,)))
+            if self._dim == 1 :
+                dirac = (jnp.arange(npix_dirac) == int(npix_dirac / 2)).astype(float)
+                wt_dirac = self.decompose(dirac)
+                self._norms = jnp.sqrt(jnp.sum(wt_dirac**2, axis=(1,)))
+            else:
+                dirac = jnp.diag((jnp.arange(npix_dirac) == int(npix_dirac / 2)).astype(float))
+                wt_dirac = self.decompose(dirac)
+                self._norms = jnp.sqrt(jnp.sum(wt_dirac**2, axis=(1, 2,)))
         return self._norms
 
     

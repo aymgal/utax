@@ -82,6 +82,43 @@ def convolve_separable_dilated(image2D, kernel1D, dilation=1, boundary='edge'):
     
     return rowcolblur[:,:,0]
 
+@partial(jit, static_argnums=(2, 3))
+def convolve_dilated1D(signal1D, kernel1D, dilation=1, boundary='edge'):
+    """
+
+     Convolves a vector contained in signal1D with the 1D kernel.
+     The operation is basically the following:
+         blured1D = signal1D * kernel1D
+
+    Parameters
+    ----------
+    signal1D : 1D array
+        vector to be convolved with the kernel.
+    kernel1D : 1D array
+        kernel to convolve signal1D with..
+    dilation : TYPE, optional
+        makes the spacial extent of the kernel bigger. The default is 1.
+
+    Returns
+    -------
+    1D array convoluted by the kernel.
+    """
+
+    # padding
+    b = int(kernel1D.size // 2) * dilation
+    padded = jnp.pad(signal1D, ((b, b)), mode=boundary)
+
+    shape = kernel1D.shape
+    strides = tuple(1 for s in shape)
+    rowblur = conv_general_dilated(padded[None, None], kernel1D[None, None],
+                                   window_strides=strides,
+                                   padding='VALID',
+                                   rhs_dilation=(dilation,),
+                                   )
+
+    return rowblur[0, 0]
+
+
 
 def build_convolution_matrix(psf_kernel_2d, image_shape):
     """

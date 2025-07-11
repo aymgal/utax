@@ -7,7 +7,7 @@ import numpy as np
 import numpy.testing as npt
 from test.convolution_test import gaussian_kernel
 
-from jax.config import config
+from jax import config
 config.update("jax_enable_x64", True)
 
 import utax

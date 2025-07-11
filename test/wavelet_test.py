@@ -16,7 +16,7 @@ from utax.wavelet import *
 
 class TestWaveletTransform(object):
 
-    def setup(self):
+    def setup_method(self):
         utax_path = os.path.dirname(utax.__path__[0])
         data_path = os.path.join(utax_path, 'test', 'data')
 

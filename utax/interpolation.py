@@ -16,17 +16,33 @@ class BilinearInterpolator(object):
 
     """
     def __init__(self, x, y, z, allow_extrapolation=True):
-        self.z = jnp.array(z)  # z
-        if np.all(np.diff(x) >= 0):  # check if sorted in increasing order
-            self.x = jnp.array(x)
-        else:
-            self.x = jnp.array(np.sort(x))
-            self.z = jnp.flip(self.z, axis=0)
-        if np.all(np.diff(y) >= 0):  # check if sorted in increasing order
-            self.y = jnp.array(y)
-        else:
-            self.y = jnp.array(np.sort(y))
-            self.z = jnp.flip(self.z, axis=1)
+       self.z = jnp.array(z)
+
+        # Sort x if not increasing
+        x = jnp.array(x)
+        x_sorted = jnp.sort(x)
+        flip_x = ~jnp.all(jnp.diff(x) >= 0)
+
+        def x_keep_fn(_):
+            return x, self.z
+
+        def x_sort_fn(_):
+            return x_sorted, jnp.flip(self.z, axis=0)
+
+        self.x, self.z = lax.cond(flip_x, x_sort_fn, x_keep_fn, operand=None)
+
+        # Sort y if not increasing
+        y = jnp.array(y)
+        y_sorted = jnp.sort(y)
+        flip_y = ~jnp.all(jnp.diff(y) >= 0)
+
+        def y_keep_fn(_):
+            return y, self.z
+
+        def y_sort_fn(_):
+            return y_sorted, jnp.flip(self.z, axis=1)
+
+        self.y, self.z = lax.cond(flip_y, y_sort_fn, y_keep_fn, operand=None)
         self._extrapol_bool = allow_extrapolation
 
     def __call__(self, x, y, dx=0, dy=0):

@@ -7,7 +7,7 @@ import numpy as np
 import numpy.testing as npt
 from test.convolution_test import gaussian_kernel
 
-from jax.config import config
+from jax import config
 config.update("jax_enable_x64", True)
 
 import utax
@@ -16,7 +16,7 @@ from utax.wavelet import *
 
 class TestWaveletTransform(object):
 
-    def setup(self):
+    def setup_method(self):
         utax_path = os.path.dirname(utax.__path__[0])
         data_path = os.path.join(utax_path, 'test', 'data')
 

@@ -5,8 +5,8 @@ import numpy as np
 import numpy.testing as npt
 from scipy import signal, ndimage
 
-from jax.config import config
-config.update("jax_enable_x64", True)  # makes a difference when comparing to scipy's routines!!
+import jax
+jax.config.update("jax_enable_x64", True) # makes a difference when comparing to scipy's routines!!
 
 from utax.convolution import *
 

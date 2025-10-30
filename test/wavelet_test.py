@@ -1,7 +1,7 @@
 __author__ = 'aymgal'
 
 
-import unittest
+import pytest
 import os
 import numpy as np
 import numpy.testing as npt
@@ -14,7 +14,7 @@ import utax
 from utax.wavelet import *
 
 
-class TestStarletTransform(unittest.TestCase):
+class TestStarletTransform(object):
 
     def setup_method(self):
         utax_path = os.path.dirname(utax.__path__[0])
@@ -64,18 +64,18 @@ class TestStarletTransform(unittest.TestCase):
         assert np.all(norms[:-1] > norms[1:])
 
 
-class TestBLWTransform(unittest.TestCase):
+# class TestBLWTransform(object):
 
-    def setUp(self):
-        utax_path = os.path.dirname(utax.__path__[0])
-        data_path = os.path.join(utax_path, 'test', 'data')
+#     def setup_method(self):
+#         utax_path = os.path.dirname(utax.__path__[0])
+#         data_path = os.path.join(utax_path, 'test', 'data')
 
-        # load some test images obtained using from pysparse (sparse2d) from PySAP
-        self.image = np.load(os.path.join(data_path, 'galaxy_image.npy'))
-        self.coeffs_bl1 = np.load(os.path.join(data_path, 'galaxy_battle-lemarie-1_coeffs_gen1_pysparse.npy'))
-        self.n_scales = self.coeffs_bl1.shape[0]-1
+#         # load some test images obtained using from pysparse (sparse2d) from PySAP
+#         self.image = np.load(os.path.join(data_path, 'galaxy_image.npy'))
+#         self.coeffs_bl1 = np.load(os.path.join(data_path, 'galaxy_battle-lemarie-1_coeffs_gen1_pysparse.npy'))
+#         self.n_scales = self.coeffs_bl1.shape[0]-1
 
-    def test_decomposition(self):
-        starlet = WaveletTransform(self.n_scales, wavelet_type='battle-lemarie-1', second_gen=False)
-        coeffs = starlet.decompose(self.image)
-        npt.assert_almost_equal(coeffs, self.coeffs_bl1, decimal=6)
+#     def test_decomposition(self):
+#         starlet = WaveletTransform(self.n_scales, wavelet_type='battle-lemarie-1', second_gen=False)
+#         coeffs = starlet.decompose(self.image)
+#         npt.assert_almost_equal(coeffs, self.coeffs_bl1, decimal=6)

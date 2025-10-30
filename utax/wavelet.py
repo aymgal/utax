@@ -132,7 +132,7 @@ class WaveletTransform(object):
             return image
 
         # Preparations
-        image = jnp.copy(image)
+        # image = jnp.copy(image)
         kernel = self._h.copy()
 
         # Compute the first scale:
@@ -165,7 +165,7 @@ class WaveletTransform(object):
             return image
 
         # Preparations
-        image = jnp.copy(image)
+        # image = jnp.copy(image)
         kernel = self._h.copy()
 
         # Compute the first scale:
@@ -200,7 +200,7 @@ class WaveletTransform(object):
     @partial(jit, static_argnums=(0,))
     def _reconstruct_2nd_gen(self, coeffs):
         # Validate input
-        assert coeffs.shape[0] == self._n_scales+1, \
+        assert coeffs.shape[-3] == self._n_scales+1, \
                "Wavelet coefficients are not consistent with number of scales"
         if self._n_scales == 0:
             return coeffs[0, :, :]

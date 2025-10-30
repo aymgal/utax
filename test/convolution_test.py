@@ -5,8 +5,8 @@ import numpy as np
 import numpy.testing as npt
 from scipy import signal, ndimage
 
-import jax
-jax.config.update("jax_enable_x64", True) # makes a difference when comparing to scipy's routines!!
+from jax import config
+config.update("jax_enable_x64", True)  # makes a difference when comparing to scipy's routines!!
 
 from utax.convolution import *
 
@@ -61,6 +61,17 @@ def test_convolve_separable_dilated():
     # image_conv_ref = signal.convolve2d(image, kernel_2d, mode='same', boundary='wrap')
     # print(image_conv.shape, image_conv_ref.shape)
     # npt.assert_almost_equal(image_conv, image_conv_ref, decimal=5)
+
+def convolve_dilated1D():
+    # test the utax function against scipy's method convolve
+    np.random.seed(36)
+    vec = np.random.randn(100)
+
+    # odd kernels
+    kernel_1d = gaussian_kernel(sigma=0.4, odd=True, ndim=1)
+    image_conv = np.array(convolve_separable_dilated(vec, kernel_1d, boundary='wrap'))
+    image_conv_ref = signal.convolve1d(vec, kernel_1d, mode='same', boundary='wrap')
+    npt.assert_almost_equal(image_conv[1:-1], image_conv_ref[1:-1], decimal=5)
 
 
 def test_gaussian_filter():

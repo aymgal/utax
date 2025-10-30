@@ -1,6 +1,6 @@
 __author__ = 'aymgal'
 
-import unittest
+import pytest
 import os
 import numpy as np
 import numpy.testing as npt
@@ -12,9 +12,9 @@ import utax
 from utax.interpolation import *
 
 
-class TestBilinearInterpolator(unittest.TestCase):
+class TestBilinearInterpolator(object):
 
-    def setup(self):
+    def setup_method(self):
         utax_path = os.path.dirname(utax.__path__[0])
         data_path = os.path.join(utax_path, 'test', 'data')
 

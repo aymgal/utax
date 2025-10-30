@@ -2,7 +2,7 @@ from functools import partial
 import jax.numpy as jnp
 from jax import jit
 
-from utax.convolution import convolve_separable_dilated
+from utax.convolution import convolve_separable_dilated, convolve_dilated1D
 
 
 class WaveletTransform(object):
@@ -12,10 +12,11 @@ class WaveletTransform(object):
     Parameters
     ----------
     nscales : number of scales in the decomposition
+    dim : dimensionality of the convolution (2 for image, 1 for 1D vector)
     self._type : supported types are 'starlet', 'battle-lemarie-1', 'battle-lemarie-3'
 
     """
-    def __init__(self, nscales, wavelet_type='starlet', second_gen=False):
+    def __init__(self, nscales, wavelet_type='starlet', second_gen=False, dim=2):
         self._n_scales = nscales
         self._second_gen = second_gen
         if wavelet_type == 'starlet':
@@ -113,13 +114,28 @@ class WaveletTransform(object):
             self.decompose = self._decompose_1st_gen
             self.reconstruct = self._reconstruct_1st_gen
 
+        self._dim = dim
+        if self._dim == 1:
+            self.convolve = convolve_dilated1D
+            if self._second_gen:
+                raise NotImplementedError('2nd generation of wavelet not yet implemented for 1D decomposition.')
+        elif self._dim == 2:
+            self.convolve = convolve_separable_dilated
+        else:
+            raise ValueError(f"Dimensionality {dim} not supported.")
+
     @property
     def scale_norms(self):
         if not hasattr(self, '_norms'):
             npix_dirac = 2**(self._n_scales + 2)
-            dirac = jnp.diag((jnp.arange(npix_dirac) == int(npix_dirac / 2)).astype(float))
-            wt_dirac = self.decompose(dirac)
-            self._norms = jnp.sqrt(jnp.sum(wt_dirac**2, axis=(1, 2,)))
+            if self._dim == 1 :
+                dirac = (jnp.arange(npix_dirac) == int(npix_dirac / 2)).astype(float)
+                wt_dirac = self.decompose(dirac)
+                self._norms = jnp.sqrt(jnp.sum(wt_dirac**2, axis=(1,)))
+            else:
+                dirac = jnp.diag((jnp.arange(npix_dirac) == int(npix_dirac / 2)).astype(float))
+                wt_dirac = self.decompose(dirac)
+                self._norms = jnp.sqrt(jnp.sum(wt_dirac**2, axis=(1, 2,)))
         return self._norms
 
     
@@ -136,7 +152,7 @@ class WaveletTransform(object):
         kernel = self._h.copy()
 
         # Compute the first scale:
-        c1 = convolve_separable_dilated(image, kernel)
+        c1 = self.convolve(image, kernel)
         # Wavelet coefficients:
         w0 = (image - c1)  
         result = jnp.expand_dims(w0, 0)
@@ -146,7 +162,7 @@ class WaveletTransform(object):
         # at each scale, the kernel becomes larger ( a trou ) using the
         # dilation argument in the jax wrapper for convolution.
         for step in range(1, self._n_scales):
-            cj1 = convolve_separable_dilated(cj, kernel, dilation=self._fac**step)
+            cj1 = self.convolve(cj, kernel, dilation=self._fac**step)
             # wavelet coefficients
             wj = (cj - cj1)
             result = jnp.concatenate((result, jnp.expand_dims(wj, 0)), axis=0)
@@ -169,8 +185,8 @@ class WaveletTransform(object):
         kernel = self._h.copy()
 
         # Compute the first scale:
-        c1 = convolve_separable_dilated(image, kernel)
-        c1p = convolve_separable_dilated(c1, kernel)
+        c1 = self.convolve(image, kernel)
+        c1p = self.convolve(c1, kernel)
         # Wavelet coefficients:
         w0 = (image - c1p)  
         result = jnp.expand_dims(w0, 0)
@@ -180,8 +196,8 @@ class WaveletTransform(object):
         # at each scale, the kernel becomes larger ( a trou ) using the
         # dilation argument in the jax wrapper for convolution.
         for step in range(1, self._n_scales):
-            cj1  = convolve_separable_dilated(cj, kernel, dilation=self._fac**step)
-            cj1p = convolve_separable_dilated(cj1, kernel, dilation=self._fac**step)
+            cj1  = self.convolve(cj, kernel, dilation=self._fac**step)
+            cj1p = self.convolve(cj1, kernel, dilation=self._fac**step)
             # wavelet coefficients
             wj = (cj - cj1p)
             result = jnp.concatenate((result, jnp.expand_dims(wj, 0)), axis=0)
@@ -209,7 +225,7 @@ class WaveletTransform(object):
         
         # Start with the last scale 'J-1'
         cJ = coeffs[self._n_scales, :, :]
-        cJp = convolve_separable_dilated(cJ, kernel, 
+        cJp = self.convolve(cJ, kernel,
                                        dilation=self._fac**(self._n_scales-1))
         
 
@@ -219,7 +235,7 @@ class WaveletTransform(object):
         # Compute the remaining scales
         for ii in range(self._n_scales-2, -1, -1):
             cj1 = cj
-            cj1p = convolve_separable_dilated(cj1, kernel, dilation=self._fac**ii)
+            cj1p = self.convolve(cj1, kernel, dilation=self._fac**ii)
             wj1 = coeffs[ii, :, :]
             cj = cj1p + wj1
 

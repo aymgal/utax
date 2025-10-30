@@ -16,7 +16,7 @@ class BilinearInterpolator(object):
 
     """
     def __init__(self, x, y, z, allow_extrapolation=True):
-       self.z = jnp.array(z)
+        self.z = jnp.array(z)
 
         # Sort x if not increasing
         x = jnp.array(x)

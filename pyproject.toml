@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "utax"
+version = "0.0.2"
+description = "Utility functions for signal processing, compatible with the differentiable programming library JAX."
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Aymeric Galan", email = "aymeric.galan@gmail.com"},
+    {name = "Austin Peel"},
+    {name = "Martin Millon"},
+    {name = "Frederic Dux"},
+    {name = "Kevin Michalewicz"},
+]
+keywords = ["jax", "signal processing", "wavelet", "convolution", "interpolation"]
+requires-python = ">=3.10"
+dependencies = [
+    "jax>=0.5.0",
+    "jaxlib>=0.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "pytest-pep8",
+]
+
+[project.urls]
+Homepage = "https://github.com/aymgal/utax"
+Repository = "https://github.com/aymgal/utax"
+
+[tool.setuptools.packages.find]
+include = ["utax*"]

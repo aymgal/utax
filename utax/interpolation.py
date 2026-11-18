@@ -75,9 +75,9 @@ class BilinearInterpolator(object):
         # x_ind = jnp.digitize(x, self.x_padded) - 1
         # y_ind = jnp.digitize(y, self.y_padded) - 1
         x_ind = jnp.searchsorted(self.x, x, side='right') - 1
-        x_ind = jnp.clip(x_ind, a_min=0, a_max=(len(self.x) - 2))
+        x_ind = jnp.clip(x_ind, min=0, max=(len(self.x) - 2))
         y_ind = jnp.searchsorted(self.y, y, side='right') - 1
-        y_ind = jnp.clip(y_ind, a_min=0, a_max=(len(self.y) - 2))
+        y_ind = jnp.clip(y_ind, min=0, max=(len(self.y) - 2))
 
         # Determine the coordinates and dimensions of this pixel
         x1 = self.x[x_ind]
